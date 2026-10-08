@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Yapay Zekâ Quizi</title>
+<style>
+:root{--bg:#fff8f0;--card:#fff;--ink:#1b1b3a;--mute:#5e5e80;--line:#e3dcf0;--c:#7b4dff;--ok:#0f8a5f;--okbg:#ddf6ea;--bad:#c93b4a;--badbg:#fde3e6;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#12112a;--card:#1d1b3f;--ink:#f1eeff;--mute:#a9a5d0;--line:#37336b;--ok:#5fe0ac;--okbg:#103a2c;--bad:#ff8f9b;--badbg:#411a22}}
+:root[data-theme="dark"]{--bg:#12112a;--card:#1d1b3f;--ink:#f1eeff;--mute:#a9a5d0;--line:#37336b;--ok:#5fe0ac;--okbg:#103a2c;--bad:#ff8f9b;--badbg:#411a22}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box}
+body{margin:0;color:var(--ink);font-family:"Trebuchet MS","Segoe UI",system-ui,sans-serif;line-height:1.5;min-height:100vh;background:color-mix(in srgb,var(--c) 16%,var(--bg));transition:background .5s}
+main{max-width:560px;margin:0 auto;padding:20px 16px 40px}
+h1{font-size:1.7rem;line-height:1.2;margin:6px 0 10px}
+p{margin:0 0 10px}.mute{color:var(--mute)}
+.card{background:var(--card);border:2px solid color-mix(in srgb,var(--c) 40%,var(--line));border-radius:18px;padding:18px;box-shadow:0 8px 0 color-mix(in srgb,var(--c) 30%,transparent)}
+.bar{height:8px;background:var(--line);border-radius:4px;margin:0 0 10px;overflow:hidden}
+.bar i{display:block;height:100%;background:var(--c);border-radius:4px;transition:width .4s}
+.scene{background:color-mix(in srgb,var(--c) 12%,var(--card));border-radius:12px;margin:0 0 14px;overflow:hidden}
+.scene svg{display:block;width:100%;height:auto;color:var(--ink)}
+.q{font-size:1.1rem;font-weight:700;margin:0 0 12px}
+.opt{display:block;width:100%;text-align:left;font:inherit;color:inherit;background:transparent;border:2px solid var(--line);border-radius:12px;padding:11px 14px;margin-bottom:9px;cursor:pointer;transition:transform .1s,border-color .1s}
+.opt:hover:not(:disabled){border-color:var(--c);transform:translateX(3px)}
+.opt:focus-visible,.btn:focus-visible{outline:3px solid var(--c);outline-offset:2px}
+.opt.ok{border-color:var(--ok);background:var(--okbg);animation:pop .4s}
+.opt.bad{border-color:var(--bad);background:var(--badbg);animation:shake .4s}
+.opt:disabled{cursor:default}
+.msg{font-weight:700;margin:4px 0 10px;min-height:1.5em}
+.btn{font:inherit;font-weight:700;background:var(--c);color:#fff;border:0;border-radius:12px;padding:12px 22px;cursor:pointer;box-shadow:0 4px 0 rgba(0,0,0,.25)}
+.btn:active{transform:translateY(3px);box-shadow:none}
+.hello{list-style:none;padding:0;margin:0 0 16px}
+.hello li{padding:7px 0;border-bottom:1px dashed var(--line)}
+.score{font-size:3rem;font-weight:800;margin:0}
+.big{font-size:4.5rem;text-align:center;margin:4px 0}
+.head{font-size:1.3rem;font-weight:800;margin:4px 0 6px}
+[hidden]{display:none!important}
+#fx{position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:9}
+.s{fill:none;stroke:var(--c);stroke-width:3;stroke-linecap:round;stroke-linejoin:round}
+.f{fill:var(--c)}.g{fill:none;stroke:currentColor;stroke-opacity:.35;stroke-width:2}
+.t{font:700 11px "Trebuchet MS",sans-serif;fill:currentColor}
+.pulse{animation:pulse 1.6s ease-in-out infinite;transform-box:fill-box;transform-origin:center}
+.draw{stroke-dasharray:420;animation:draw 3.2s ease-in-out infinite}
+.pt{animation:mv 3.4s ease-in-out infinite alternate}
+.drop{animation:drip 1.8s linear infinite}
+.spin{transform-origin:160px 75px;animation:spin 5s linear infinite}
+.thr{animation:thr 3s ease-in-out infinite alternate}
+.zone{transform-origin:280px 0;animation:zone 3s ease-in-out infinite alternate}
+.agent{offset-path:path('M50 80 L160 80 L270 80 Q160 5 50 80');animation:along 4s linear infinite}
+.fly{animation:fly 4.5s ease-in-out infinite;transform-box:fill-box;transform-origin:center}
+.ck{animation:ck 4.5s ease-in-out infinite}
+.bob{display:inline-block;animation:bob 1.2s ease-in-out infinite}
+.grow{display:inline-block;animation:grow 2.5s ease-out infinite;transform-origin:bottom}
+@keyframes pulse{50%{transform:scale(1.35)}}
+@keyframes draw{0%{stroke-dashoffset:420}60%,100%{stroke-dashoffset:0}}
+@keyframes mv{0%,25%{transform:translate(0,0)}75%,100%{transform:translate(var(--dx),var(--dy))}}
+@keyframes drip{0%{transform:translateX(0);opacity:0}15%{opacity:1}85%{opacity:1}100%{transform:translateX(130px);opacity:0}}
+@keyframes spin{to{transform:rotate(360deg)}}
+@keyframes thr{to{transform:translateX(72px)}}
+@keyframes zone{to{transform:scaleX(.4)}}
+@keyframes along{to{offset-distance:100%}}
+@keyframes fly{0%{transform:translateX(-130px);opacity:0}25%{opacity:1}55%,100%{transform:translateX(0);opacity:1}}
+@keyframes ck{0%,55%{opacity:0}70%,100%{opacity:1}}
+@keyframes bob{50%{transform:translateY(-12px)}}
+@keyframes grow{0%{transform:scale(.3)}70%,100%{transform:scale(1)}}
+@keyframes pop{50%{transform:scale(1.04)}}
+@keyframes shake{25%{transform:translateX(-6px)}75%{transform:translateX(6px)}}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+<canvas id="fx"></canvas>
+<main>
+  <section id="start" class="card">
+    <div class="scene"><svg viewBox="0 0 320 120" aria-hidden="true">
+      <g class="g"><path d="M60 30L160 20M60 30L160 60M60 30L160 100M60 90L160 20M60 90L160 60M60 90L160 100M160 20L260 60M160 60L260 60M160 100L260 60"/></g>
+      <g class="f"><circle class="pulse" cx="60" cy="30" r="9"/><circle class="pulse" cx="60" cy="90" r="9" style="animation-delay:.4s"/><circle class="pulse" cx="160" cy="20" r="9" style="animation-delay:.8s"/><circle class="pulse" cx="160" cy="60" r="9" style="animation-delay:1.2s"/><circle class="pulse" cx="160" cy="100" r="9" style="animation-delay:.2s"/><circle class="pulse" cx="260" cy="60" r="12" style="animation-delay:.6s"/></g>
+    </svg></div>
+    <h1>Yapay Zekâ Quizine Hoş Geldin!</h1>
+    <ul class="hello">
+      <li>🧠 Karşında 7 soru var: makine öğrenmesi, veri ve yapay zekâ ajanları.</li>
+      <li>🎯 Her soruda A, B, C veya D şıklarından birini seç.</li>
+      <li>⚡ Cevabını hemen görürsün, doğru şık yeşil yanar.</li>
+      <li>🏆 Overfitting'e düşme, veri sızıntısına izin verme!</li>
+      <li>🚀 Hazırsan başlayalım dostum!</li>
+    </ul>
+    <button class="btn" id="go">Başla</button>
+  </section>
+
+  <section id="quiz" class="card" hidden>
+    <div class="bar"><i id="prog"></i></div>
+    <p class="mute" id="count"></p>
+    <div class="scene" id="scene"></div>
+    <p class="q" id="q"></p>
+    <div id="opts"></div>
+    <p class="msg" id="msg" aria-live="polite"></p>
+    <button class="btn" id="next" hidden>Sonraki</button>
+  </section>
+
+  <section id="end" class="card" hidden>
+    <div class="big" id="emoji"></div>
+    <p class="mute">Quiz tamamlandı!</p>
+    <p class="score" id="score"></p>
+    <p class="head" id="head"></p>
+    <p id="verdict"></p>
+    <button class="btn" id="again">Tekrar oyna</button>
+  </section>
+</main>
+<script>
+const questions=[
+{q:"Eğitim verisinde başarılı, yeni verilerde başarısız olan model hangi durumu gösterir?",o:["Underfitting","Overfitting","Normalizasyon","Kümeleme"],a:1},
+{q:"PCA'nın temel amacı nedir?",o:["Modeli eğitmek","Eksik etiketleri doldurmak","Eski veriler ile eşleştirmek","Boyut sayısını azaltmak"],a:3},
+{q:"Tahmin sırasında kullanılamaması gereken bilginin modele verilmesine ne denir?",o:["Veri sızıntısı","Ölçekleme","Boyut indirgeme","Veri artırma"],a:0},
+{q:"Güncel web bilgilerini kaynaklarıyla araştırmak için hangi araç en uygundur?",o:["Claude","Perplexity","Manus","Gemini Notebook"],a:1},
+{q:"Bir sınıflandırma modelinde karar eşiği 0,5'ten 0,8'e yükseltilirse hangisi kesinlikle doğrudur?",o:["Pozitif tahmin sayısı artar","Modelin doğruluğu kesin artar","Duyarlılık kesin artar","Pozitif tahmin sayısı artamaz"],a:3},
+{q:"Bir yapay zekâ ajanı çok adımlı bir görevi genellikle nasıl yürütür?",o:["Tek yanıt üretip durur","Plan yapar, araç kullanır ve sonuçlara göre ilerler","Eğitim verisini değiştirir","Sonuçlara göre adımlarını değiştiremez"],a:1},
+{q:"Modelin eğitimde görmediği örneklerde de başarılı olmasına ne denir?",o:["Ezberleme","Genelleme","Veri sızıntısı","Etiketleme"],a:1}];
+const colors=["#ff4d8d","#f59e0b","#14b8a6","#3b82f6","#a855f7","#f97316","#10b981"];
+const pts=[[100,60,14,34],[150,110,-11,-26],[200,50,3,7],[230,90,-16,-38],[70,115,-1,-2],[260,40,-2,-6]];
+const dr=[0,.6,1.2].map(d=>`<circle class="drop f" cx="95" cy="75" r="5" style="animation-delay:${d}s"/>`).join("");
+const shapes=`<rect class="fly f" x="20" y="60" width="26" height="26" rx="4"/><polygon class="fly f" points="20,50 46,50 33,28" style="animation-delay:.25s;transform:translateY(0)"/><circle class="fly f" cx="33" cy="105" r="13" style="animation-delay:.5s"/>`;
+const sv=b=>`<svg viewBox="0 0 320 150" aria-hidden="true">${b}</svg>`;
+const scenes=[
+sv(`<path class="g" d="M20 80Q150 65 290 72" stroke-dasharray="6 6"/><path class="s draw" d="M30 100L70 60L110 95L150 50L190 90L230 55L270 85"/><g class="f">${[[30,100],[70,60],[110,95],[150,50],[190,90],[230,55],[270,85]].map((p,i)=>`<circle class="pulse" cx="${p[0]}" cy="${p[1]}" r="6" style="animation-delay:${i*.2}s"/>`).join("")}</g><text class="t" x="20" y="140">eğitimde mükemmel, yeni veride şaşırır</text>`),
+sv(`<line class="g" x1="40" y1="125" x2="280" y2="25" stroke-dasharray="5 5"/><g class="f">${pts.map(p=>`<circle class="pt" cx="${p[0]}" cy="${p[1]}" r="7" style="--dx:${p[2]}px;--dy:${p[3]}px"/>`).join("")}</g><text class="t" x="20" y="145">2 boyut → 1 boyut</text>`),
+sv(`<rect class="g" x="15" y="50" width="80" height="50" rx="8"/><text class="t" x="28" y="80">test verisi</text><rect class="s" x="225" y="50" width="80" height="50" rx="8"/><text class="t" x="250" y="80">model</text><path class="g" d="M100 75H220" stroke-dasharray="4 5"/>${dr.replace(/cx="95"/g,'cx="100"')}<text class="t" x="20" y="135">gizli bilgi modele sızıyor!</text>`),
+sv(`<circle class="s" cx="160" cy="75" r="45"/><ellipse class="g" cx="160" cy="75" rx="20" ry="45"/><path class="g" d="M115 75H205M122 52H198M122 98H198"/><g class="spin"><g transform="translate(160 20)"><circle class="s" r="14" style="fill:var(--card)"/><path class="s" d="M10 10L24 24"/></g></g><text class="t" x="20" y="145">güncel web + kaynaklar</text>`),
+sv(`<path class="g" d="M40 75H280"/><g class="f">${[60,90,130,175,200,235,262].map(x=>`<circle cx="${x}" cy="${75+(x%3)*14-14}" r="6"/>`).join("")}</g><rect class="zone f" x="160" y="45" width="120" height="60" style="fill-opacity:.2"/><g class="thr"><path class="s" d="M160 35V115"/><text class="t" x="148" y="30">eşik</text></g><text class="t" x="20" y="140">0,5 → 0,8</text>`),
+sv(`<g class="s" style="fill:var(--card)"><circle cx="50" cy="80" r="26"/><circle cx="160" cy="80" r="26"/><circle cx="270" cy="80" r="26"/></g><text class="t" x="37" y="84">Plan</text><text class="t" x="148" y="84">Araç</text><text class="t" x="251" y="84">Sonuç</text><path class="g" d="M270 54Q160 -30 50 54" stroke-dasharray="5 5"/><circle class="agent f" r="7"/><text class="t" x="20" y="145">planla → araç kullan → sonuca göre ilerle</text>`),
+sv(`<circle class="s" cx="200" cy="75" r="38" style="fill:var(--card)"/><text class="t" x="181" y="79">model</text>${shapes}<text class="ck f" x="248" y="82" style="font-size:30px">✓</text><text class="t" x="20" y="145">daha önce görmediği örnekler</text>`)];
+const L=["A","B","C","D"];let i=0,score=0;
+const $=id=>document.getElementById(id);
+const show=id=>["start","quiz","end"].forEach(s=>$(s).hidden=s!==id);
+const setC=c=>document.documentElement.style.setProperty("--c",c);
+function render(){const c=questions[i];setC(colors[i]);
+$("count").textContent="Soru "+(i+1)+" / "+questions.length;$("prog").style.width=(i/questions.length*100)+"%";
+$("scene").innerHTML=scenes[i];$("q").textContent=c.q;$("msg").textContent="";$("next").hidden=true;
+const box=$("opts");box.innerHTML="";
+c.o.forEach((t,k)=>{const b=document.createElement("button");b.className="opt";b.textContent=L[k]+") "+t;b.onclick=()=>answer(k);box.appendChild(b)})}
+function answer(k){const c=questions[i],bs=$("opts").children;
+for(let n=0;n<bs.length;n++){bs[n].disabled=true;if(n===c.a)bs[n].classList.add("ok")}
+if(k===c.a){score++;$("msg").textContent="Doğru! 🎉";burst(40)}
+else{bs[k].classList.add("bad");$("msg").textContent="Yanlış. Doğru cevap: "+L[c.a]}
+$("next").textContent=i===questions.length-1?"Sonucu gör":"Sonraki";$("next").hidden=false;$("next").focus()}
+function finish(){setC("#7b4dff");$("score").textContent=score+" / "+questions.length;
+let e,h,v;
+if(score===7){e='<span class="bob">🏆</span>';h="TAM PUAN! Kusursuzsun! 🎆";v="Manyaksın başa belasın be!!!";party(5)}
+else if(score>=6){e='<span class="bob">🔥</span>';h="Neredeyse kusursuz!";v="Manyaksın başa belasın be!!!";party(2)}
+else if(score>=4){e='<span class="bob">😎</span>';h="İyi gidiyorsun!";v="Fena değilsin cano";burst(60)}
+else{e='<span class="grow">🌱</span>';h="Her uzman bir yerden başlar.";v="Daha yolun var canım"}
+$("emoji").innerHTML=e;$("head").textContent=h;$("verdict").textContent=v;show("end")}
+const start=()=>{i=0;score=0;show("quiz");render()};
+$("go").onclick=start;$("again").onclick=()=>{start()};
+$("next").onclick=()=>{i++;i<questions.length?render():finish()};
+const cv=$("fx"),cx=cv.getContext("2d");let P=[],run=false;
+function fit(){cv.width=innerWidth;cv.height=innerHeight}addEventListener("resize",fit);fit();
+function burst(n,x,y){if(matchMedia("(prefers-reduced-motion:reduce)").matches)return;
+for(let k=0;k<n;k++)P.push({x:x??cv.width/2,y:y??cv.height*.55,vx:(Math.random()-.5)*12,vy:-Math.random()*13-3,r:Math.random()*5+3,c:colors[k%7],a:1});
+if(!run){run=true;tick()}}
+function party(n){for(let k=0;k<n;k++)setTimeout(()=>burst(90,Math.random()*cv.width,cv.height*(.3+Math.random()*.3)),k*450)}
+function tick(){cx.clearRect(0,0,cv.width,cv.height);
+P=P.filter(p=>p.a>0.02);P.forEach(p=>{p.vy+=.35;p.x+=p.vx;p.y+=p.vy;p.a-=.012;cx.globalAlpha=p.a;cx.fillStyle=p.c;cx.fillRect(p.x,p.y,p.r,p.r*1.6)});
+P.length?requestAnimationFrame(tick):(run=false,cx.clearRect(0,0,cv.width,cv.height))}
+</script>
+</body>
+</html>
